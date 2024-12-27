@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { connection } from '../../../shared/database/connection';
-import PostgresError from '../../../shared/database/PostgressError';
+import { PostgresError, translateError } from '../../../shared/database/PostgressError';
 
 interface CriarPessoaRequest{
     nome: string;
@@ -32,13 +32,9 @@ export async function criarPessoa(pessoa: CriarPessoaRequest): Promise<CriarPess
     
     if (error instanceof Error && 'code' in error && 'detail' in error && 'hint' in error) { 
         const postgresError: PostgresError = error as PostgresError; 
-        console.log('codigo', postgresError.code)
-        console.log('detail', postgresError.detail)
-        console.log('hint', postgresError.hint)
-        throw Error(postgresError.detail);
+        translateError(postgresError);
     }
 
-    console.log(error);
     throw error;
   } 
 
