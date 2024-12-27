@@ -1,6 +1,6 @@
 import express, { Request, NextFunction } from "express";
 import 'express-async-errors'
-import { router } from "./routes";
+import router from "./router";
 import 'dotenv/config'; 
 
 const app = express();
