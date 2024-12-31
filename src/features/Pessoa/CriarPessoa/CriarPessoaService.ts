@@ -1,41 +1,18 @@
 import { v4 as uuidv4 } from 'uuid';
-import { connection } from '../../../shared/database/connection';
-import { PostgresError, translateError } from '../../../shared/database/PostgressError';
+import 'reflect-metadata';
+import { injectable, inject } from 'inversify';
+import { TYPES } from './types';
+import { IPessoaRepository } from './CriarPessoaRepository';
+import { ICriarPessoaRequest, ICriarPessoaResponse } from './CriarPessoaModels';
 
-interface CriarPessoaRequest{
-    nome: string;
-    dtNascimento: Date;
-}
+@injectable()
+export class PessoaService {
+    constructor(
+        @inject(TYPES.PessoaRepository) private pessoaRepository: IPessoaRepository
+    ) {}
 
-interface CriarPessoaResponse {
-    id: string;
-    nome: string;
-    dtNascimento: Date;
-    ativo: boolean;
-}
-
-export async function criarPessoa(pessoa: CriarPessoaRequest): Promise<CriarPessoaResponse> {
-
-  try{
-    const client = await connection.getClient();
-    const sql = 'INSERT INTO pessoa (id, nome, dtNascimento) VALUES ($1, $2, $3) RETURNING *';
-    const values = [uuidv4(), pessoa.nome, pessoa.dtNascimento];
-    const { rows } = await client.query<CriarPessoaResponse>(sql, values);    
-
-    if (!rows[0].id) {
-        throw new Error('Nenhuma linha foi inserida');
+    async criarPessoa(pessoa: ICriarPessoaRequest): Promise<ICriarPessoaResponse> {
+        const id = uuidv4();
+        return await this.pessoaRepository.criarPessoa(id, pessoa.nome, pessoa.dtNascimento);
     }
-
-    return rows[0] as CriarPessoaResponse;
-
-  } catch(error){
-    
-    if (error instanceof Error && 'code' in error && 'detail' in error && 'hint' in error) { 
-        const postgresError: PostgresError = error as PostgresError; 
-        translateError(postgresError);
-    }
-
-    throw error;
-  } 
-
 }
